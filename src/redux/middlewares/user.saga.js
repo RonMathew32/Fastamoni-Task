@@ -1,7 +1,7 @@
 import {put, takeLatest } from '@redux-saga/core/effects';
 import { ACTION_TYPES } from '../actions/actionTypes';
 import { ApiCall } from '../../utils/apiService';
-import { setUserData } from '../actions/user.actions';
+import { setUserProfile } from '../actions/user.actions';
 
 function* getUserProfileRequest({ data }) {
   const headers = data?.token? {Authorization: `Bearer ` + data?.token} : {};
@@ -19,7 +19,7 @@ function* getUserProfileRequest({ data }) {
     } else if (res.status == 200) {
       console.log('GET PROFILE SUCCESSFULL ', res);
       data?.setUser(res?.response)
-      yield put(data?.setUserData(res?.response));
+      yield put(setUserProfile(res?.response));
       data?.setLoading ? data?.setLoading(false) : null;
     }
   } catch (e) {
@@ -60,7 +60,7 @@ function* updateUserProfileRequest({ data }) {
       originalData.data.email = patchData.response.email;
       originalData.support.text = patchData.response.text;
       originalData.data.updatedAt = patchData.response.updatedAt;
-      yield put(setUserData(originalData));
+      yield put(setUserProfile(originalData));
       data?.onSuccess?  data?.onSuccess() : null
       data?.setLoading ? data?.setLoading(false) : null;
     }

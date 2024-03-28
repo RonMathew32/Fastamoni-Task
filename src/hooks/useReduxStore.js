@@ -7,6 +7,8 @@ const useReduxStore = () => {
   const dispatch = useDispatch();
   const { token, user_id } = useSelector((state) => state.authRed);
   const { user } = useSelector((state) => state.userRed);
+
+  console.log('USER:::>>> ', user);
   const commonAPIData = {
     token,
     ToastMessageLight,

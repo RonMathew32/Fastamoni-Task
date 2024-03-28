@@ -1,10 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {View, Text, Image, StyleSheet} from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-} from 'react-native-reanimated';
 import globalStyles from '../../theme/globalStyles';
 import useReduxStore from '../../hooks/useReduxStore';
 import {
@@ -15,35 +10,28 @@ import {COLORS} from '../../theme/colors';
 import AppButton from '../../components/AppButton';
 import {wp} from '../../theme/dimensions';
 import AppLoading from '../../components/AppLoading';
-import { getUserProfile, setUserClear, setUserData } from '../../redux/actions/user.actions';
+import { getUserProfile, setUserClear, setUserData, setUserProfile } from '../../redux/actions/user.actions';
 import routes from '../../constants/routes';
+import { BASE_URL } from '@env';
+import { useSelector } from 'react-redux';
 
 const HomeScreen = ({navigation}) => {
-  const { dispatch, user_id, user, loading, setLoading, token} = useReduxStore();
+  const { dispatch, user_id, loading, setLoading, token} = useReduxStore();
+  const {user} = useSelector(state =>state?.userRed)
   const name = user?.data?.first_name
     ? `${user?.data?.first_name} ${user?.data?.last_name}`
     : '';
-  const translateX = useSharedValue(-100);
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{translateX: withTiming(translateX.value)}],
-    };
-  });
 
-
-  const getUserDetails = useCallback(() => {
-    if (!user?.id) {
-      dispatch(
-        getUserProfile({
-          token,
-          param: user_id,
-          setLoading,
-          ToastMessageLight,
-          setUserData: setUserData
-        }),
-      );
-    }
-  },[dispatch, setLoading, ToastMessageLight, user?.id]);
+  // const getUserDetails = useCallback(() => {
+  //     dispatch(
+  //       getUserProfile({
+  //         token,
+  //         param: user_id,
+  //         setLoading,
+  //         ToastMessageLight,
+  //       }),
+  //     );
+  // },[dispatch, setLoading, ToastMessageLight, user?.id]);
 
   const onPressLogout = useCallback(() => {
     dispatch(setUserClear())
@@ -55,9 +43,24 @@ const HomeScreen = ({navigation}) => {
     navigation.navigate(routes?.EditProfile)
   },[navigation, routes])
 
+  const fetchData = async () => {
+    try {
+      const response = await fetch(`https://reqres.in/api/users/4`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      console.log(data);
+      dispatch(setUserProfile(data))
+    } catch (error) {
+      console.error('Error fetching data:', error.message);
+    }
+  };
+
   useEffect(() => {
-    translateX.value = 0;
-    getUserDetails();
+    if(!user?.data?.id){
+      fetchData();
+    }
   }, []);
 
 
@@ -65,8 +68,8 @@ const HomeScreen = ({navigation}) => {
     <AppLoading />
   ) : (
     <View style={[globalStyles.container, styles.container]}>
-      <Animated.View
-        style={[styles.userContainer, globalStyles.alignR, animatedStyle]}>
+      <View
+        style={[styles.userContainer, globalStyles.alignR]}>
         {user?.data?.avatar ? (
           <Image source={{uri: user?.data?.avatar}} style={styles.avatar} />
         ) : null}
@@ -74,7 +77,7 @@ const HomeScreen = ({navigation}) => {
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.email}>{user?.data?.email}</Text>
         </View>
-      </Animated.View>
+      </View>
       <View style={styles.supportContainer}>
         <Text style={styles.supportText}>{user?.support?.text}</Text>
       </View>
